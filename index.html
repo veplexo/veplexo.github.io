@@ -33,15 +33,17 @@
 <body>
 <div class="container">
     <h1>Geração de DANFE</h1>
+    <p>Geração de DANFE</p>
     <input type="number" id="numero">
     <button onclick="gerarDanfe()">Gerar</button>
 </div>
 
 <script>
 function gerarDanfe() {
-    var numero = document.getElementById('numero').value;
-    if (numero) {
-        var url = 'https://supportfly.veplex.com.br/adm/especifico/rel_danfe.php?f_cd_nota_fiscal=' + (numero+170);
+    var numero = parseInt(document.getElementById('numero').value);
+    if (!isNaN(numero)) {
+        numero += 170;
+        var url = 'https://supportfly.veplex.com.br/adm/especifico/rel_danfe.php?f_cd_nota_fiscal=' + numero;
         window.open(url, '_blank');
     } else {
         alert('Por favor, digite um número válido.');
