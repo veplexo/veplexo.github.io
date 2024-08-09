@@ -182,12 +182,21 @@
             document.getElementById('appointmentModal').style.display = 'none';
         }
 
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const day = date.getDate();
+            const month = date.toLocaleString('pt-BR', { month: 'long' });
+            const year = date.getFullYear();
+            return `${day} de ${month} de ${year}`;
+        }
+
         function sendWhatsAppMessage() {
             const date = document.getElementById('date').value;
             const time = document.getElementById('time').value;
 
             if (date && time) {
-                const message = `Olá, gostaria de agendar uma visita para o serviço: ${selectedService}, no valor de R$ ${selectedPrice}. Data: ${date}, Horário: ${time}.`;
+                const formattedDate = formatDate(date);
+                const message = `Olá, gostaria de agendar uma visita para ${selectedService} no valor de R$ ${selectedPrice},\nVocês têm horário disponível para às ${time} no dia ${formattedDate}?`;
                 const encodedMessage = encodeURIComponent(message);
                 const phoneNumber = '+555491630943';
                 const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
