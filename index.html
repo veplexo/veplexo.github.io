@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviços da Oficina</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 300px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .card-content {
+            padding: 15px;
+            height: 120px; /* Altura fixa para manter o alinhamento */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .card-content h3 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .card-content p {
+            margin: 10px 0 0;
+            color: #777;
+        }
+        .card-footer {
+            padding: 15px;
+            background-color: #eee;
+        }
+        .card-footer button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+        .modal-header {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .modal-footer {
+            text-align: right;
+        }
+        .modal-footer button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .modal-footer button.cancel {
+            background-color: #dc3545;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Serviços da Oficina</h1>
+    <div class="card-container">
+        <div class="card">
+            <img src="https://via.placeholder.com/300x200" alt="Serviço 1">
+            <div class="card-content">
+                <h3>Troca de Óleo</h3>
+                <p>R$ 150,00</p>
+            </div>
+            <div class="card-footer">
+                <button onclick="openModal('Troca de Óleo', 150)">Agendar Visita</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <img src="https://via.placeholder.com/300x200" alt="Serviço 2">
+            <div class="card-content">
+                <h3>Alinhamento e Balanceamento</h3>
+                <p>R$ 120,00</p>
+            </div>
+            <div class="card-footer">
+                <button onclick="openModal('Alinhamento e Balanceamento', 120)">Agendar Visita</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <img src="https://via.placeholder.com/300x200" alt="Serviço 3">
+            <div class="card-content">
+                <h3>Revisão Completa</h3>
+                <p>R$ 350,00</p>
+            </div>
+            <div class="card-footer">
+                <button onclick="openModal('Revisão Completa', 350)">Agendar Visita</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Agendar Visita</h2>
+            </div>
+            <div>
+                <p><strong>Serviço:</strong> <span id="serviceName"></span></p>
+                <p><strong>Preço:</strong> R$ <span id="servicePrice"></span></p>
+                <label for="date">Data:</label>
+                <input type="date" id="date" required><br><br>
+                <label for="time">Horário:</label>
+                <input type="time" id="time" required><br><br>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel" onclick="closeModal()">Cancelar</button>
+                <button onclick="sendWhatsAppMessage()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedService = '';
+        let selectedPrice = 0;
+
+        function openModal(service, price) {
+            selectedService = service;
+            selectedPrice = price;
+            document.getElementById('serviceName').innerText = service;
+            document.getElementById('servicePrice').innerText = price;
+            document.getElementById('appointmentModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('appointmentModal').style.display = 'none';
+        }
+
+        function sendWhatsAppMessage() {
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+
+            if (date && time) {
+                const message = `Olá, gostaria de agendar uma visita para o serviço: ${selectedService}, no valor de R$ ${selectedPrice}. Data: ${date}, Horário: ${time}.`;
+                const encodedMessage = encodeURIComponent(message);
+                const phoneNumber = '+555491630943';
+                const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+
+                window.open(url, '_blank');
+            } else {
+                alert('Por favor, selecione uma data e horário.');
+            }
+        }
+    </script>
+</body>
+</html>
