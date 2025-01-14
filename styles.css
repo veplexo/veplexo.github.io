@@ -1,6 +1,7 @@
 /* Reset básico */
 body {
-    font-family: Arial, sans-serif;
+    /*font-family: Arial, sans-serif; //original */ 
+    font-family: "Lexend", serif;
     margin: 10px 50px 10px 50px;
     padding: 10px;
     display: flex;
@@ -21,6 +22,20 @@ header {
 .subtitle {
     color:#a3a2a2;
 }
+
+/* meus customs */
+
+.container {
+    width: 75%;
+    margin: 0 auto;
+}
+
+hr {
+    border: 2px solid lightgrey;
+    border-radius: 5px;
+  }
+
+/* fim meus customs */
 
 /* Navegação principal */
 nav {
@@ -148,6 +163,8 @@ img {
     width: 100%;
     height: auto;
     max-width: 100%; /* Garante que a imagem não ultrapasse o tamanho do contêiner */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px; /* opcional, para bordas arredondadas */
 }
 
 /* Responsividade */
