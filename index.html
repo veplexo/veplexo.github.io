@@ -3,158 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acerte a Senha</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center; 
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            display: inline-block;
-        }
-        .grid { 
-            display: flex; 
-            justify-content: center; 
-            margin: 10px;
-        }
-        .slot {
-            width: 50px; 
-            height: 50px; 
-            font-size: 24px; 
-            text-align: center; 
-            margin: 5px; 
-            border: 2px solid #ccc;
-            border-radius: 5px;
-            text-align: center;
-        }
-        .correct { background-color: green; color: white; }
-        .partial { background-color: yellow; }
-        .wrong { background-color: lightgray; }
-        .attempts {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 20px;
-        }
-        .attempt-row {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-        }
-        .popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .popup button {
-            margin-top: 10px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-    </style>
+    <title>Senha Wordle</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Acerte a Senha</h1>
-        <div class="attempts" id="tentativas"></div>
-        <div class="grid">
-            <input type="text" maxlength="1" class="slot" id="s1" oninput="mudarSlot(1)">
-            <input type="text" maxlength="1" class="slot" id="s2" oninput="mudarSlot(2)">
-            <input type="text" maxlength="1" class="slot" id="s3" oninput="mudarSlot(3)">
-            <input type="text" maxlength="1" class="slot" id="s4" oninput="mudarSlot(4)">
-        </div>
-        <button onclick="verificarSenha()">Enviar</button>
-        <p id="resultado"></p>
+        <h1>Senha Wordle</h1>
+        <p>Tente adivinhar a senha de 4 dígitos. Os dígitos podem se repetir.</p>
+        <div id="board"></div>
+        <input type="text" id="guess-input" maxlength="4" placeholder="Digite sua senha">
+        <button id="submit-btn">Enviar</button>
+        <p id="message"></p>
     </div>
-    
-    <div class="popup" id="popup">
-        <p id="compartilharTexto"></p>
-        <button onclick="fecharPopup()">Fechar</button>
-    </div>
-
-    <script>
-        function gerarSenha() {
-            let data = new Date();
-            let dia = data.getDate();
-            let mes = data.getMonth() + 1;
-            let ano = data.getFullYear() % 100;
-            let senha = [(dia * mes) % 10, (mes + ano) % 10, (dia + ano) % 10, (mes * ano) % 10];
-            return senha.map(String);
-        }
-        
-        const senha = gerarSenha();
-        const maxTentativas = 4;
-        let tentativas = JSON.parse(localStorage.getItem("tentativas")) || [];
-
-        function mudarSlot(id) {
-            if (document.getElementById(`s${id}`).value !== "" && id < 4) {
-                document.getElementById(`s${id + 1}`).focus();
-            }
-        }
-        
-        function verificarSenha() {
-            if (tentativas.length >= maxTentativas) {
-                alert("Você já usou todas as suas tentativas!");
-                return;
-            }
-            
-            let input = [
-                document.getElementById("s1").value,
-                document.getElementById("s2").value,
-                document.getElementById("s3").value,
-                document.getElementById("s4").value
-            ];
-            
-            if (input.includes("")) {
-                alert("Preencha todos os campos!");
-                return;
-            }
-            
-            let resultado = input.map((num, i) => {
-                if (num === senha[i]) return `<span class='slot correct'>${num}</span>`;
-                if (senha.includes(num)) return `<span class='slot partial'>${num}</span>`;
-                return `<span class='slot wrong'>${num}</span>`;
-            }).join(" ");
-            
-            tentativas.push(resultado);
-            localStorage.setItem("tentativas", JSON.stringify(tentativas));
-            
-            atualizarTentativas();
-            if (input.join("") === senha.join("")) {
-                document.getElementById("resultado").innerText = `Parabéns! Você acertou a senha em ${tentativas.length} tentativas!`;
-                mostrarPopup();
-            } else if (tentativas.length >= maxTentativas) {
-                document.getElementById("resultado").innerText = `Acabaram as tentativas! A senha era ${senha.join("")}`;
-            }
-        }
-        
-        function atualizarTentativas() {
-            let div = document.getElementById("tentativas");
-            div.innerHTML = tentativas.map(t => `<div class='attempt-row'>${t}</div>`).join(" ");
-        }
-        
-        function mostrarPopup() {
-            document.getElementById("popup").style.display = "block";
-            document.getElementById("compartilharTexto").innerText = `Consegui acertar a senha em ${tentativas.length} tentativas!`;
-        }
-        
-        function fecharPopup() {
-            document.getElementById("popup").style.display = "none";
-        }
-        
-        atualizarTentativas();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
