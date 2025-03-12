@@ -21,7 +21,7 @@
         .grid { 
             display: flex; 
             justify-content: center; 
-            margin: 20px; 
+            margin: 10px;
         }
         .slot {
             width: 50px; 
@@ -35,7 +35,18 @@
         }
         .correct { background-color: green; color: white; }
         .partial { background-color: yellow; }
-        .attempts { margin: 20px; }
+        .wrong { background-color: lightgray; }
+        .attempts {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .attempt-row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
         .popup {
             display: none;
             position: fixed;
@@ -57,6 +68,7 @@
 <body>
     <div class="container">
         <h1>Acerte a Senha</h1>
+        <div class="attempts" id="tentativas"></div>
         <div class="grid">
             <input type="text" maxlength="1" class="slot" id="s1" oninput="mudarSlot(1)">
             <input type="text" maxlength="1" class="slot" id="s2" oninput="mudarSlot(2)">
@@ -65,7 +77,6 @@
         </div>
         <button onclick="verificarSenha()">Enviar</button>
         <p id="resultado"></p>
-        <div class="attempts" id="tentativas"></div>
     </div>
     
     <div class="popup" id="popup">
@@ -111,24 +122,19 @@
                 return;
             }
             
-            let resultado = "";
-            for (let i = 0; i < 4; i++) {
-                if (input[i] === senha[i]) {
-                    resultado += `${input[i]}🟩 `;
-                } else if (senha.includes(input[i])) {
-                    resultado += `${input[i]}🟨 `;
-                } else {
-                    resultado += `${input[i]}⬜ `;
-                }
-            }
+            let resultado = input.map((num, i) => {
+                if (num === senha[i]) return `<span class='slot correct'>${num}</span>`;
+                if (senha.includes(num)) return `<span class='slot partial'>${num}</span>`;
+                return `<span class='slot wrong'>${num}</span>`;
+            }).join(" ");
             
-            tentativas.push({ tentativa: input.join(""), resultado });
+            tentativas.push(resultado);
             localStorage.setItem("tentativas", JSON.stringify(tentativas));
             
             atualizarTentativas();
             if (input.join("") === senha.join("")) {
                 document.getElementById("resultado").innerText = `Parabéns! Você acertou a senha em ${tentativas.length} tentativas!`;
-                mostrarPopup(tentativas);
+                mostrarPopup();
             } else if (tentativas.length >= maxTentativas) {
                 document.getElementById("resultado").innerText = `Acabaram as tentativas! A senha era ${senha.join("")}`;
             }
@@ -136,12 +142,12 @@
         
         function atualizarTentativas() {
             let div = document.getElementById("tentativas");
-            div.innerHTML = tentativas.map(t => `<p>${t.resultado}</p>`).join("");
+            div.innerHTML = tentativas.map(t => `<div class='attempt-row'>${t}</div>`).join(" ");
         }
         
-        function mostrarPopup(tentativas) {
+        function mostrarPopup() {
             document.getElementById("popup").style.display = "block";
-            document.getElementById("compartilharTexto").innerText = `Consegui acertar a senha em ${tentativas.length} tentativas!\n${tentativas.map(t => t.resultado).join("\n")}`;
+            document.getElementById("compartilharTexto").innerText = `Consegui acertar a senha em ${tentativas.length} tentativas!`;
         }
         
         function fecharPopup() {
