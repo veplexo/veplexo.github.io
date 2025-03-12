@@ -15,29 +15,37 @@
         }
         .row {
             display: flex;
+            justify-content: center;
             gap: 5px;
             margin: 5px 0;
         }
         .slot {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border: 2px solid #ccc;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
+            box-sizing: border-box;
+        }
+        .input-slot {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #ccc;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
         .yellow {
             background-color: #ffeb3b;
         }
         .green {
             background-color: #4caf50;
-        }
-        input {
-            width: 30px;
-            text-align: center;
-            font-size: 16px;
         }
         button {
             margin-top: 10px;
@@ -48,38 +56,51 @@
             margin-top: 20px;
             font-weight: bold;
         }
+        .whatsapp-button {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .whatsapp-button:hover {
+            background-color: #20bd57;
+        }
     </style>
 </head>
 <body>
     <h1>Acerte a Senha</h1>
-    <p>Tente adivinhar a senha de 4 dígitos (0-9). Você tem 4 tentativas!</p>
+    <p>Tente adivinhar a senha de 4 dígitos (0-9). Você tem 6 tentativas!</p>
     <div class="game-container" id="game">
         <div class="row" id="row1"></div>
         <div class="row" id="row2"></div>
         <div class="row" id="row3"></div>
         <div class="row" id="row4"></div>
-        <div class="row">
-            <input type="number" min="0" max="9" id="in1">
-            <input type="number" min="0" max="9" id="in2">
-            <input type="number" min="0" max="9" id="in3">
-            <input type="number" min="0" max="9" id="in4">
+        <div class="row" id="row5"></div>
+        <div class="row" id="row6"></div>
+        <div class="row" id="input-row">
+            <input type="text" class="input-slot" id="in1" maxlength="1">
+            <input type="text" class="input-slot" id="in2" maxlength="1">
+            <input type="text" class="input-slot" id="in3" maxlength="1">
+            <input type="text" class="input-slot" id="in4" maxlength="1">
         </div>
         <button onclick="checkGuess()">Enviar</button>
     </div>
     <div id="result"></div>
 
     <script>
-        const currentDate = new Date('March 12, 2025'); // Data fixa para exemplo
+        const currentDate = new Date('March 12, 2025');
         const attempts = [];
         let attemptCount = 0;
 
-        // Geração da senha baseada na data (cálculo obfuscado)
         function generatePassword() {
             const day = currentDate.getDate();
             const month = currentDate.getMonth() + 1;
             const year = currentDate.getFullYear();
             
-            // Cálculo complexo para gerar senha única
             let seed = (year * 13 + month * 17 + day * 23) % 10000;
             const password = String(seed).padStart(4, '0').split('').map(Number);
             return password;
@@ -87,7 +108,23 @@
 
         const correctPassword = generatePassword();
 
-        // Carrega tentativas salvas
+        const inputs = document.querySelectorAll('.input-slot');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                if (e.target.value.length === 1 && index < 3) {
+                    inputs[index + 1].focus();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && input.value === '' && index > 0) {
+                    inputs[index - 1].focus();
+                } else if (e.key === 'Enter') {
+                    checkGuess();
+                }
+            });
+        });
+
         function loadAttempts() {
             const saved = localStorage.getItem('passwordGame_' + currentDate.toDateString());
             if (saved) {
@@ -95,19 +132,17 @@
                 attempts.push(...data.attempts);
                 attemptCount = data.attemptCount;
                 updateBoard();
-                if (data.won || attemptCount >= 4) {
+                if (data.won || attemptCount >= 6) {
                     endGame(data.won);
                 }
             }
         }
 
-        // Salva tentativas no localStorage
         function saveAttempts(won = false) {
             localStorage.setItem('passwordGame_' + currentDate.toDateString(), 
                 JSON.stringify({ attempts, attemptCount, won }));
         }
 
-        // Atualiza o tabuleiro
         function updateBoard() {
             for (let i = 0; i < attempts.length; i++) {
                 const row = document.getElementById(`row${i + 1}`);
@@ -115,19 +150,17 @@
                 const guess = attempts[i];
                 const tempPassword = [...correctPassword];
                 
-                // Primeiro marca os verdes (acertos exatos)
                 for (let j = 0; j < 4; j++) {
                     const slot = document.createElement('div');
                     slot.classList.add('slot');
                     slot.textContent = guess[j];
                     if (guess[j] === tempPassword[j]) {
                         slot.classList.add('green');
-                        tempPassword[j] = null; // Remove para não contar novamente
+                        tempPassword[j] = null;
                     }
                     row.appendChild(slot);
                 }
 
-                // Depois marca os amarelos (dígitos certos, posição errada)
                 for (let j = 0; j < 4; j++) {
                     if (!row.children[j].classList.contains('green')) {
                         const digit = guess[j];
@@ -141,59 +174,90 @@
             }
         }
 
-        // Verifica o palpite
         function checkGuess() {
-            if (attemptCount >= 4) return;
+            if (attemptCount >= 6) return;
 
-            const inputs = [
+            const inputsValues = [
                 Number(document.getElementById('in1').value),
                 Number(document.getElementById('in2').value),
                 Number(document.getElementById('in3').value),
                 Number(document.getElementById('in4').value)
             ];
 
-            if (inputs.some(n => isNaN(n) || n < 0 || n > 9)) {
-                document.getElementById('result').textContent = 'Digite apenas números de 0 a 9!';
+            if (inputsValues.some(n => isNaN(n))) {
+                document.getElementById('result').textContent = 'Preencha todos os campos com números!';
                 return;
             }
 
-            attempts.push(inputs);
+            attempts.push(inputsValues);
             attemptCount++;
             updateBoard();
             saveAttempts();
 
-            const won = inputs.every((n, i) => n === correctPassword[i]);
+            const won = inputsValues.every((n, i) => n === correctPassword[i]);
             if (won) {
                 saveAttempts(true);
                 endGame(true);
-            } else if (attemptCount === 4) {
+            } else if (attemptCount === 6) {
                 endGame(false);
             }
 
-            // Limpa os inputs
-            document.getElementById('in1').value = '';
-            document.getElementById('in2').value = '';
-            document.getElementById('in3').value = '';
-            document.getElementById('in4').value = '';
+            inputs.forEach(input => {
+                input.value = '';
+            });
+            inputs[0].focus();
         }
 
-        // Finaliza o jogo
+        function generateShareText(won) {
+            if (won) {
+                const formattedAttempts = attempts.map(guess => {
+                    const tempPassword = [...correctPassword];
+                    const formatted = guess.map((digit, i) => {
+                        if (digit === tempPassword[i]) {
+                            tempPassword[i] = null;
+                            return `[*${digit}*]`; // Dígito correto no lugar certo
+                        }
+                        return `[${digit}]`; // Placeholder inicial
+                    });
+
+                    for (let i = 0; i < 4; i++) {
+                        if (!formatted[i].startsWith('*')) {
+                            const digit = guess[i];
+                            const index = tempPassword.indexOf(digit);
+                            if (index !== -1) {
+                                formatted[i] = `[_${digit}_]`; // Dígito correto no lugar errado
+                                tempPassword[index] = null;
+                            }
+                        }
+                    }
+                    return formatted.join(' ');
+                }).join('\n');
+
+                return `Acertei a senha do dia ${currentDate.toLocaleDateString('pt-BR')} em ${attemptCount}/6 tentativas!\n${formattedAttempts}`;
+            } else {
+                return `Não consegui acertar a senha do dia ${currentDate.toLocaleDateString('pt-BR')}!\nA senha era ${correctPassword.join('')}.`;
+            }
+        }
+
         function endGame(won) {
             const resultDiv = document.getElementById('result');
+            const shareText = generateShareText(won);
+            const encodedText = encodeURIComponent(shareText);
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+
             if (won) {
-                const shareText = `Acertei a senha do dia ${currentDate.toLocaleDateString('pt-BR')} em ${attemptCount}/4 tentativas!\n` +
-                    attempts.map(a => a.join('')).join('\n');
                 resultDiv.innerHTML = `Parabéns! Você acertou a senha em ${attemptCount} tentativa(s)!<br>` +
-                    `<textarea readonly>${shareText}</textarea>`;
+                    `<a href="${whatsappUrl}" target="_blank" class="whatsapp-button">Compartilhar no WhatsApp</a>`;
             } else {
-                resultDiv.textContent = `Fim de jogo! A senha era ${correctPassword.join('')}. Tente novamente amanhã!`;
+                resultDiv.innerHTML = `Fim de jogo! A senha era ${correctPassword.join('')}. Tente novamente amanhã!`;
             }
+            
             document.querySelector('button').disabled = true;
-            document.querySelectorAll('input').forEach(input => input.disabled = true);
+            inputs.forEach(input => input.disabled = true);
         }
 
-        // Inicializa o jogo
         loadAttempts();
+        inputs[0].focus();
     </script>
 </body>
 </html>
