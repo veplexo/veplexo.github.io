@@ -58,10 +58,10 @@
             border-color: #666;
         }
         .yellow {
-            background-color: #edb600; /* Amarelo original */
+            background-color: #edb600;
         }
         .green {
-            background-color: #4caf50; /* Verde original */
+            background-color: #4caf50;
         }
         #result {
             margin: 20px 0;
@@ -109,14 +109,14 @@
             border: 2px solid #fff;
         }
         .calendar-day.green {
-            background-color: #4caf50; /* Verde original */
+            background-color: #4caf50;
             color: white;
         }
         .calendar-day.yellow {
-            background-color: #edb600; /* Amarelo original */
+            background-color: #edb600;
         }
         .calendar-day.red {
-            background-color: #ff3333; /* Vermelho original */
+            background-color: #ff3333;
             color: white;
         }
         .current-date {
@@ -189,7 +189,7 @@
     </div>
 
     <script>
-        let currentDate = new Date('March 13, 2025'); // Data fixa conforme fornecida
+        let currentDate = new Date('March 13, 2025');
         const attempts = [];
         let attemptCount = 0;
         let selectedDate = new Date(currentDate);
@@ -221,7 +221,7 @@
             const firstDay = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), 1);
             const lastDay = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth() + 1, 0);
             const firstDayOfWeek = firstDay.getDay();
-            const today = new Date(currentDate); // Usa a data atual fornecida
+            const today = new Date(currentDate);
             
             document.getElementById('currentMonth').textContent = 
                 firstDay.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
@@ -286,7 +286,12 @@
             attempts.length = 0;
             attemptCount = 0;
             document.getElementById('result').innerHTML = '';
+            const inputRow = document.getElementById('input-row');
             const inputs = document.querySelectorAll('.input-slot');
+            
+            // Reexibe os inputs
+            inputRow.style.display = 'flex';
+            
             inputs.forEach(input => {
                 input.disabled = false;
                 input.value = '';
@@ -406,24 +411,22 @@
             if (won) {
                 const formattedAttempts = attempts.map(guess => {
                     const tempPassword = [...correctPassword];
-                    const result = Array(4).fill('⬜'); // Inicializa com emoji de número errado
+                    const result = Array(4).fill('⬜');
 
-                    // Primeiro, verifica os números certos na posição certa
                     for (let i = 0; i < 4; i++) {
                         if (guess[i] === tempPassword[i]) {
-                            result[i] = '🟩'; // Número certo, posição certa
-                            tempPassword[i] = null; // Marca como usado
+                            result[i] = '🟩';
+                            tempPassword[i] = null;
                         }
                     }
 
-                    // Depois, verifica os números certos na posição errada
                     for (let i = 0; i < 4; i++) {
-                        if (result[i] === '⬜') { // Só verifica se ainda não foi marcado como correto
+                        if (result[i] === '⬜') {
                             const digit = guess[i];
                             const index = tempPassword.indexOf(digit);
                             if (index !== -1) {
-                                result[i] = '🟨'; // Número certo, posição errada
-                                tempPassword[index] = null; // Marca como usado
+                                result[i] = '🟨';
+                                tempPassword[index] = null;
                             }
                         }
                     }
@@ -442,6 +445,7 @@
             const shareText = generateShareText(won);
             const encodedText = encodeURIComponent(shareText);
             const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+            const inputRow = document.getElementById('input-row');
 
             if (won) {
                 resultDiv.innerHTML = `Parabéns! Você acertou a senha em ${attemptCount} tentativa(s)!<br>` +
@@ -450,7 +454,8 @@
                 resultDiv.innerHTML = `Fim de jogo! A senha era ${correctPassword.join('')}. Tente novamente amanhã!`;
             }
             
-            inputs.forEach(input => input.disabled = true);
+            // Oculta os inputs
+            inputRow.style.display = 'none';
         }
 
         updateCurrentDate();
