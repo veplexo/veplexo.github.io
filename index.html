@@ -144,7 +144,7 @@
     </div>
 
     <script>
-        let currentDate = new Date();
+        let currentDate = new Date('March 13, 2025'); // Data fixa conforme fornecida
         const attempts = [];
         let attemptCount = 0;
         let selectedDate = new Date(currentDate);
@@ -176,18 +176,24 @@
             const firstDay = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), 1);
             const lastDay = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth() + 1, 0);
             const firstDayOfWeek = firstDay.getDay();
+            const today = new Date(currentDate); // Usa a data atual fornecida
             
             document.getElementById('currentMonth').textContent = 
                 firstDay.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
 
+            // Preenche os dias vazios antes do início do mês
             for (let i = 0; i < firstDayOfWeek; i++) {
                 const emptyDay = document.createElement('div');
                 emptyDay.classList.add('calendar-day');
                 calendar.appendChild(emptyDay);
             }
 
-            const today = new Date();
-            for (let day = 1; day <= lastDay.getDate(); day++) {
+            // Determina o último dia a ser exibido (todos os dias para meses passados, até hoje para o mês atual)
+            const isCurrentMonth = currentCalendarMonth.getFullYear() === today.getFullYear() && 
+                                  currentCalendarMonth.getMonth() === today.getMonth();
+            const maxDay = isCurrentMonth ? today.getDate() : lastDay.getDate();
+
+            for (let day = 1; day <= maxDay; day++) {
                 const dayDate = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
                 const dayElement = document.createElement('div');
                 dayElement.classList.add('calendar-day');
