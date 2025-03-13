@@ -20,6 +20,17 @@
             width: 100%;
             max-width: 400px;
         }
+        .quartet-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1000px;
+            margin: 20px auto;
+        }
+        .quartet-column {
+            width: 25%;
+            max-width: 200px;
+        }
         .row {
             display: flex;
             justify-content: center;
@@ -59,12 +70,8 @@
             outline: none;
             border-color: #666;
         }
-        .yellow {
-            background-color: #edb600;
-        }
-        .green {
-            background-color: #4caf50;
-        }
+        .yellow { background-color: #edb600; }
+        .green { background-color: #4caf50; }
         #result {
             margin: 20px 0;
             font-weight: bold;
@@ -81,20 +88,18 @@
             display: inline-block;
             font-size: clamp(14px, 4vw, 16px);
         }
-        .whatsapp-button:hover {
-            background-color: #20bd57;
-        }
-        .language-selector {
-            margin: 10px 0;
-        }
-        select {
+        .whatsapp-button:hover { background-color: #20bd57; }
+        .language-selector, .mode-selector { margin: 10px 0; }
+        select, button {
             padding: 5px;
             font-size: 16px;
             background-color: #333;
             color: #fff;
             border: 1px solid #444;
             border-radius: 5px;
+            cursor: pointer;
         }
+        button:hover { background-color: #444; }
         .calendar-container {
             max-width: 800px;
             margin: 20px auto;
@@ -115,57 +120,28 @@
             background-color: #2a2a2a;
             font-size: clamp(12px, 3vw, 16px);
         }
-        .calendar-day:hover {
-            background-color: #404040;
-        }
-        .current-day {
-            border: 2px solid #fff;
-        }
-        .calendar-day.green {
-            background-color: #4caf50;
-            color: white;
-        }
-        .calendar-day.yellow {
-            background-color: #edb600;
-        }
-        .calendar-day.red {
-            background-color: #ff3333;
-            color: white;
-        }
+        .calendar-day:hover { background-color: #404040; }
+        .current-day { border: 2px solid #fff; }
+        .calendar-day.green { background-color: #4caf50; color: white; }
+        .calendar-day.yellow { background-color: #edb600; }
+        .calendar-day.red { background-color: #ff3333; color: white; }
         .current-date {
             font-size: clamp(16px, 5vw, 18px);
             margin-bottom: 20px;
             font-weight: bold;
         }
-        .pagination {
-            margin: 10px 0;
-        }
+        .pagination { margin: 10px 0; }
         .pagination button {
             padding: 5px 10px;
             margin: 0 5px;
-            background-color: #333;
-            color: #fff;
-            border: 1px solid #444;
-            border-radius: 3px;
-            cursor: pointer;
         }
-        .pagination button:hover {
-            background-color: #444;
-        }
-        h1 {
-            font-size: clamp(24px, 8vw, 36px);
-            margin: 0 0 10px;
-        }
-        p {
-            font-size: clamp(14px, 4vw, 16px);
-            margin: 0 0 20px;
-            color: #ccc;
-        }
+        h1 { font-size: clamp(24px, 8vw, 36px); margin: 0 0 10px; }
+        p { font-size: clamp(14px, 4vw, 16px); margin: 0 0 20px; color: #ccc; }
     </style>
 </head>
 <body>
     <h1>Wordle Multilíngue</h1>
-    <p>Tente adivinhar a palavra de 5 letras. Você tem 6 tentativas!</p>
+    <p id="gameDescription">Tente adivinhar a palavra de 5 letras. Você tem 6 tentativas!</p>
     <div class="language-selector">
         <label for="language">Idioma: </label>
         <select id="language" onchange="changeLanguage()">
@@ -174,6 +150,9 @@
             <option value="espanhol">Espanhol</option>
             <option value="italiano">Italiano</option>
         </select>
+    </div>
+    <div class="mode-selector">
+        <button id="quartetButton" onclick="toggleQuartetMode()">Quarteto</button>
     </div>
     <div class="current-date" id="currentDate"></div>
     <div class="game-container" id="game">
@@ -191,6 +170,7 @@
             <input type="text" class="input-slot" id="in5" maxlength="1">
         </div>
     </div>
+    <div class="quartet-container" id="quartetGame" style="display: none;"></div>
     <div id="result"></div>
 
     <div class="calendar-container">
@@ -210,26 +190,28 @@
         let selectedDate = new Date(currentDate);
         let currentCalendarMonth = new Date();
         let shareText = '';
-        let wordList = [];
+        let wordLists = {};
         let currentLanguage = 'portugues';
         let correctWord = '';
+        let isQuartetMode = false;
+        const languages = ['portugues', 'ingles', 'espanhol', 'italiano'];
+        let quartetCorrectWords = {};
 
         async function loadWordList(language) {
             const response = await fetch(`${language}_5.txt`);
             const text = await response.text();
-            wordList = text.split('\n').map(word => word.trim().toLowerCase()).filter(word => word.length === 5);
-            selectDailyWord();
+            wordLists[language] = text.split('\n').map(word => word.trim().toLowerCase()).filter(word => word.length === 5);
         }
 
-        function selectDailyWord() {
+        function selectDailyWord(language) {
             const day = selectedDate.getDate();
             const month = selectedDate.getMonth() + 1;
             const year = selectedDate.getFullYear();
-            let seed = (year * 10000 + month * 100 + day);
+            let seed = (year * 10000 + month * 100 + day + languages.indexOf(language));
             seed = (seed * 9301 + 49297) % 233280;
             const random = seed / 233280;
-            const index = Math.floor(random * wordList.length);
-            correctWord = wordList[index].split('');
+            const index = Math.floor(random * wordLists[language].length);
+            return wordLists[language][index].split('');
         }
 
         function updateCurrentDate() {
@@ -240,7 +222,6 @@
         function generateCalendar() {
             const calendar = document.getElementById('calendar');
             calendar.innerHTML = '';
-            
             const firstDay = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), 1);
             const lastDay = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth() + 1, 0);
             const firstDayOfWeek = firstDay.getDay();
@@ -269,21 +250,21 @@
                     dayElement.classList.add('current-day');
                 }
 
-                const saved = localStorage.getItem(`wordle_${currentLanguage}_${dayDate.toDateString()}`);
+                const key = isQuartetMode ? `quartet_${dayDate.toDateString()}` : `wordle_${currentLanguage}_${dayDate.toDateString()}`;
+                const saved = localStorage.getItem(key);
                 if (saved && dayDate <= today) {
                     const data = JSON.parse(saved);
                     if (data.won) {
                         dayElement.classList.add('green');
-                    } else if (data.attemptCount > 0 && data.attemptCount < 6) {
+                    } else if (data.attemptCount > 0 && data.attemptCount < (isQuartetMode ? 9 : 6)) {
                         dayElement.classList.add('yellow');
-                    } else if (data.attemptCount >= 6) {
+                    } else if (data.attemptCount >= (isQuartetMode ? 9 : 6)) {
                         dayElement.classList.add('red');
                     }
                 }
 
                 dayElement.addEventListener('click', () => {
                     selectedDate = dayDate;
-                    selectDailyWord();
                     resetGame();
                     updateCurrentDate();
                 });
@@ -309,102 +290,187 @@
             attempts.length = 0;
             attemptCount = 0;
             document.getElementById('result').innerHTML = '';
-            const inputRow = document.getElementById('input-row');
-            const inputs = document.querySelectorAll('.input-slot');
-            
-            inputRow.style.display = 'flex';
-            
-            inputs.forEach(input => {
-                input.disabled = false;
-                input.value = '';
-            });
-            for (let i = 1; i <= 6; i++) {
-                document.getElementById(`row${i}`).innerHTML = '';
+            if (isQuartetMode) {
+                setupQuartetMode();
+            } else {
+                const inputRow = document.getElementById('input-row');
+                inputRow.style.display = 'flex';
+                const inputs = document.querySelectorAll('.input-slot');
+                inputs.forEach(input => {
+                    input.disabled = false;
+                    input.value = '';
+                });
+                for (let i = 1; i <= 6; i++) {
+                    document.getElementById(`row${i}`).innerHTML = '';
+                }
+                correctWord = selectDailyWord(currentLanguage);
             }
             loadAttempts();
-            inputs[0].focus();
         }
 
-        const inputs = document.querySelectorAll('.input-slot');
-        inputs.forEach((input, index) => {
-            input.addEventListener('input', (e) => {
-                e.target.value = e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase();
-                if (e.target.value.length === 1 && index < 4) {
-                    inputs[index + 1].focus();
-                    inputs[index + 1].select();
+        function setupQuartetMode() {
+            const gameContainer = document.getElementById('game');
+            const quartetContainer = document.getElementById('quartetGame');
+            gameContainer.style.display = 'none';
+            quartetContainer.style.display = 'flex';
+            quartetContainer.innerHTML = '';
+            quartetCorrectWords = {};
+
+            languages.forEach(lang => {
+                const column = document.createElement('div');
+                column.classList.add('quartet-column');
+                column.innerHTML = `<h3>${lang.charAt(0).toUpperCase() + lang.slice(1)}</h3>`;
+                for (let i = 1; i <= 9; i++) {
+                    const row = document.createElement('div');
+                    row.classList.add('row');
+                    row.id = `${lang}-row${i}`;
+                    column.appendChild(row);
                 }
+                const inputRow = document.createElement('div');
+                inputRow.classList.add('row');
+                inputRow.id = `${lang}-input-row`;
+                for (let i = 1; i <= 5; i++) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.classList.add('input-slot');
+                    input.id = `${lang}-in${i}`;
+                    input.maxLength = 1;
+                    inputRow.appendChild(input);
+                }
+                column.appendChild(inputRow);
+                quartetContainer.appendChild(column);
+                quartetCorrectWords[lang] = selectDailyWord(lang);
             });
 
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Backspace') {
-                    if (input.value === '' && index > 0) {
-                        inputs[index - 1].focus();
-                        inputs[index - 1].select();
-                    } else {
-                        input.value = '';
-                    }
-                    e.preventDefault();
-                } else if (e.key === 'Enter') {
-                    checkGuess();
-                } else if (e.key === 'ArrowLeft' && index > 0) {
-                    e.preventDefault();
-                    inputs[index - 1].focus();
-                    inputs[index - 1].select();
-                } else if (e.key === 'ArrowRight' && index < 4) {
-                    e.preventDefault();
-                    inputs[index + 1].focus();
-                    inputs[index + 1].select();
-                }
+            languages.forEach(lang => {
+                const inputs = document.querySelectorAll(`#${lang}-input-row .input-slot`);
+                inputs.forEach((input, index) => {
+                    input.addEventListener('input', (e) => {
+                        e.target.value = e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase();
+                        if (e.target.value.length === 1 && index < 4) {
+                            inputs[index + 1].focus();
+                            inputs[index + 1].select();
+                        }
+                        syncInputs(lang, index, e.target.value);
+                    });
+
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Backspace') {
+                            if (input.value === '' && index > 0) {
+                                inputs[index - 1].focus();
+                                inputs[index - 1].select();
+                            } else {
+                                input.value = '';
+                                syncInputs(lang, index, '');
+                            }
+                            e.preventDefault();
+                        } else if (e.key === 'Enter') {
+                            checkGuess();
+                        } else if (e.key === 'ArrowLeft' && index > 0) {
+                            e.preventDefault();
+                            inputs[index - 1].focus();
+                            inputs[index - 1].select();
+                        } else if (e.key === 'ArrowRight' && index < 4) {
+                            e.preventDefault();
+                            inputs[index + 1].focus();
+                            inputs[index + 1].select();
+                        }
+                    });
+
+                    input.addEventListener('click', () => {
+                        input.select();
+                    });
+                });
             });
 
-            input.addEventListener('click', () => {
-                input.select();
+            document.querySelector(`#portugues-in1`).focus();
+        }
+
+        function syncInputs(sourceLang, index, value) {
+            languages.forEach(lang => {
+                if (lang !== sourceLang) {
+                    document.getElementById(`${lang}-in${index + 1}`).value = value;
+                }
             });
-        });
+        }
 
         function loadAttempts() {
-            const saved = localStorage.getItem(`wordle_${currentLanguage}_${selectedDate.toDateString()}`);
+            const key = isQuartetMode ? `quartet_${selectedDate.toDateString()}` : `wordle_${currentLanguage}_${selectedDate.toDateString()}`;
+            const saved = localStorage.getItem(key);
             if (saved) {
                 const data = JSON.parse(saved);
                 attempts.push(...data.attempts);
                 attemptCount = data.attemptCount;
                 updateBoard();
-                if (data.won || attemptCount >= 6) {
+                if (data.won || attemptCount >= (isQuartetMode ? 9 : 6)) {
                     endGame(data.won);
                 }
             }
         }
 
         function saveAttempts(won = false) {
-            localStorage.setItem(`wordle_${currentLanguage}_${selectedDate.toDateString()}`, 
-                JSON.stringify({ attempts, attemptCount, won }));
+            const key = isQuartetMode ? `quartet_${selectedDate.toDateString()}` : `wordle_${currentLanguage}_${selectedDate.toDateString()}`;
+            localStorage.setItem(key, JSON.stringify({ attempts, attemptCount, won }));
         }
 
         function updateBoard() {
-            for (let i = 0; i < attempts.length; i++) {
-                const row = document.getElementById(`row${i + 1}`);
-                row.innerHTML = '';
-                const guess = attempts[i];
-                const tempWord = [...correctWord];
-                
-                for (let j = 0; j < 5; j++) {
-                    const slot = document.createElement('div');
-                    slot.classList.add('slot');
-                    slot.textContent = guess[j];
-                    if (guess[j] === tempWord[j]) {
-                        slot.classList.add('green');
-                        tempWord[j] = null;
-                    }
-                    row.appendChild(slot);
-                }
+            if (isQuartetMode) {
+                for (let i = 0; i < attempts.length; i++) {
+                    languages.forEach(lang => {
+                        const row = document.getElementById(`${lang}-row${i + 1}`);
+                        row.innerHTML = '';
+                        const guess = attempts[i];
+                        const tempWord = [...quartetCorrectWords[lang]];
+                        
+                        for (let j = 0; j < 5; j++) {
+                            const slot = document.createElement('div');
+                            slot.classList.add('slot');
+                            slot.textContent = guess[j];
+                            if (guess[j] === tempWord[j]) {
+                                slot.classList.add('green');
+                                tempWord[j] = null;
+                            }
+                            row.appendChild(slot);
+                        }
 
-                for (let j = 0; j < 5; j++) {
-                    if (!row.children[j].classList.contains('green')) {
-                        const letter = guess[j];
-                        const index = tempWord.indexOf(letter);
-                        if (index !== -1) {
-                            row.children[j].classList.add('yellow');
-                            tempWord[index] = null;
+                        for (let j = 0; j < 5; j++) {
+                            if (!row.children[j].classList.contains('green')) {
+                                const letter = guess[j];
+                                const index = tempWord.indexOf(letter);
+                                if (index !== -1) {
+                                    row.children[j].classList.add('yellow');
+                                    tempWord[index] = null;
+                                }
+                            }
+                        }
+                    });
+                }
+            } else {
+                for (let i = 0; i < attempts.length; i++) {
+                    const row = document.getElementById(`row${i + 1}`);
+                    row.innerHTML = '';
+                    const guess = attempts[i];
+                    const tempWord = [...correctWord];
+                    
+                    for (let j = 0; j < 5; j++) {
+                        const slot = document.createElement('div');
+                        slot.classList.add('slot');
+                        slot.textContent = guess[j];
+                        if (guess[j] === tempWord[j]) {
+                            slot.classList.add('green');
+                            tempWord[j] = null;
+                        }
+                        row.appendChild(slot);
+                    }
+
+                    for (let j = 0; j < 5; j++) {
+                        if (!row.children[j].classList.contains('green')) {
+                            const letter = guess[j];
+                            const index = tempWord.indexOf(letter);
+                            if (index !== -1) {
+                                row.children[j].classList.add('yellow');
+                                tempWord[index] = null;
+                            }
                         }
                     }
                 }
@@ -412,14 +478,15 @@
         }
 
         function checkGuess() {
-            if (attemptCount >= 6) return;
+            const maxAttempts = isQuartetMode ? 9 : 6;
+            if (attemptCount >= maxAttempts) return;
 
             const inputsValues = [
-                document.getElementById('in1').value.toLowerCase(),
-                document.getElementById('in2').value.toLowerCase(),
-                document.getElementById('in3').value.toLowerCase(),
-                document.getElementById('in4').value.toLowerCase(),
-                document.getElementById('in5').value.toLowerCase()
+                document.getElementById(`${isQuartetMode ? 'portugues' : ''}in1`).value.toLowerCase(),
+                document.getElementById(`${isQuartetMode ? 'portugues' : ''}in2`).value.toLowerCase(),
+                document.getElementById(`${isQuartetMode ? 'portugues' : ''}in3`).value.toLowerCase(),
+                document.getElementById(`${isQuartetMode ? 'portugues' : ''}in4`).value.toLowerCase(),
+                document.getElementById(`${isQuartetMode ? 'portugues' : ''}in5`).value.toLowerCase()
             ];
 
             if (inputsValues.some(v => v === '')) {
@@ -432,54 +499,85 @@
             updateBoard();
             saveAttempts();
 
-            const won = inputsValues.every((c, i) => c === correctWord[i]);
+            const won = isQuartetMode ? 
+                languages.every(lang => inputsValues.every((c, i) => c === quartetCorrectWords[lang][i])) :
+                inputsValues.every((c, i) => c === correctWord[i]);
+            
             if (won) {
                 saveAttempts(true);
                 endGame(true);
-            } else if (attemptCount === 6) {
+            } else if (attemptCount === maxAttempts) {
                 endGame(false);
             }
 
-            inputs.forEach(input => input.value = '');
-            inputs[0].focus();
+            if (isQuartetMode) {
+                languages.forEach(lang => {
+                    const inputs = document.querySelectorAll(`#${lang}-input-row .input-slot`);
+                    inputs.forEach(input => input.value = '');
+                });
+                document.querySelector(`#portugues-in1`).focus();
+            } else {
+                const inputs = document.querySelectorAll('.input-slot');
+                inputs.forEach(input => input.value = '');
+                inputs[0].focus();
+            }
         }
 
         function generateShareText(won) {
-            if (won) {
-                const formattedAttempts = attempts.map(guess => {
-                    const tempWord = [...correctWord];
-                    const result = Array(5).fill('⬜');
-
-                    for (let i = 0; i < 5; i++) {
-                        if (guess[i] === tempWord[i]) {
-                            result[i] = '🟩';
-                            tempWord[i] = null;
-                        }
-                    }
-
-                    for (let i = 0; i < 5; i++) {
-                        if (result[i] === '⬜') {
-                            const letter = guess[i];
-                            const index = tempWord.indexOf(letter);
-                            if (index !== -1) {
-                                result[i] = '🟨';
-                                tempWord[index] = null;
+            if (isQuartetMode) {
+                if (won) {
+                    const formattedAttempts = attempts.map(guess => {
+                        const result = Array(5).fill('⬜');
+                        languages.forEach(lang => {
+                            const tempWord = [...quartetCorrectWords[lang]];
+                            for (let i = 0; i < 5; i++) {
+                                if (guess[i] === tempWord[i]) {
+                                    result[i] = '🟩';
+                                    tempWord[i] = null;
+                                } else if (tempWord.includes(guess[i])) {
+                                    result[i] = result[i] === '⬜' ? '🟨' : result[i];
+                                    tempWord[tempWord.indexOf(guess[i])] = null;
+                                }
+                            }
+                        });
+                        return result.join(' ');
+                    }).join('\n');
+                    return `Acertei o Quarteto do dia ${selectedDate.toLocaleDateString('pt-BR')} em ${attemptCount}/9!\n${formattedAttempts}`;
+                } else {
+                    return `Não consegui acertar o Quarteto do dia ${selectedDate.toLocaleDateString('pt-BR')}!`;
+                }
+            } else {
+                if (won) {
+                    const formattedAttempts = attempts.map(guess => {
+                        const tempWord = [...correctWord];
+                        const result = Array(5).fill('⬜');
+                        for (let i = 0; i < 5; i++) {
+                            if (guess[i] === tempWord[i]) {
+                                result[i] = '🟩';
+                                tempWord[i] = null;
                             }
                         }
-                    }
-
-                    return result.join(' ');
-                }).join('\n');
-
-                return `Acertei a palavra do dia ${selectedDate.toLocaleDateString('pt-BR')} (${currentLanguage}) em ${attemptCount}/6!\n${formattedAttempts}`;
-            } else {
-                return `Não consegui acertar a palavra do dia ${selectedDate.toLocaleDateString('pt-BR')} (${currentLanguage})!`;
+                        for (let i = 0; i < 5; i++) {
+                            if (result[i] === '⬜') {
+                                const letter = guess[i];
+                                const index = tempWord.indexOf(letter);
+                                if (index !== -1) {
+                                    result[i] = '🟨';
+                                    tempWord[index] = null;
+                                }
+                            }
+                        }
+                        return result.join(' ');
+                    }).join('\n');
+                    return `Acertei a palavra do dia ${selectedDate.toLocaleDateString('pt-BR')} (${currentLanguage}) em ${attemptCount}/6!\n${formattedAttempts}`;
+                } else {
+                    return `Não consegui acertar a palavra do dia ${selectedDate.toLocaleDateString('pt-BR')} (${currentLanguage})!`;
+                }
             }
         }
 
         function isMobileDevice() {
-            const userAgent = navigator.userAgent.toLowerCase();
-            return /android|iphone|ipad|ipod|windows phone/i.test(userAgent);
+            return /android|iphone|ipad|ipod|windows phone/i.test(navigator.userAgent.toLowerCase());
         }
 
         function copyToClipboard() {
@@ -496,37 +594,58 @@
             shareText = generateShareText(won);
             const encodedText = encodeURIComponent(shareText);
             const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
-            const inputRow = document.getElementById('input-row');
 
             if (won) {
                 if (isMobileDevice()) {
-                    resultDiv.innerHTML = `Parabéns! Você acertou a palavra em ${attemptCount} tentativa(s)!<br><br>` +
+                    resultDiv.innerHTML = `Parabéns! Você acertou ${isQuartetMode ? 'o Quarteto' : 'a palavra'} em ${attemptCount} tentativa(s)!<br><br>` +
                         `<a href="${whatsappUrl}" target="_blank" class="whatsapp-button">Compartilhar no WhatsApp</a>`;
                 } else {
-                    resultDiv.innerHTML = `Parabéns! Você acertou a palavra em ${attemptCount} tentativa(s)!<br>` +
+                    resultDiv.innerHTML = `Parabéns! Você acertou ${isQuartetMode ? 'o Quarteto' : 'a palavra'} em ${attemptCount} tentativa(s)!<br>` +
                         `<button class="whatsapp-button" onclick="copyToClipboard()">Copiar resultado</button>`;
                 }
             } else {
-                resultDiv.innerHTML = `Fim de jogo! A palavra era ${correctWord.join('')}. Tente novamente amanhã!`;
+                const words = isQuartetMode ? 
+                    languages.map(lang => `${lang}: ${quartetCorrectWords[lang].join('')}`).join(', ') :
+                    correctWord.join('');
+                resultDiv.innerHTML = `Fim de jogo! ${isQuartetMode ? 'As palavras eram' : 'A palavra era'} ${words}. Tente novamente amanhã!`;
             }
 
-            inputRow.style.display = 'none';
+            if (isQuartetMode) {
+                languages.forEach(lang => {
+                    const inputRow = document.getElementById(`${lang}-input-row`);
+                    inputRow.style.display = 'none';
+                });
+            } else {
+                document.getElementById('input-row').style.display = 'none';
+            }
         }
 
         function changeLanguage() {
-            currentLanguage = document.getElementById('language').value;
-            loadWordList(currentLanguage).then(() => {
+            if (!isQuartetMode) {
+                currentLanguage = document.getElementById('language').value;
+                correctWord = selectDailyWord(currentLanguage);
                 resetGame();
                 generateCalendar();
-            });
+            }
+        }
+
+        function toggleQuartetMode() {
+            isQuartetMode = !isQuartetMode;
+            document.getElementById('quartetButton').textContent = isQuartetMode ? 'Modo Normal' : 'Quarteto';
+            document.getElementById('gameDescription').textContent = 
+                `Tente adivinhar a palavra de 5 letras. Você tem ${isQuartetMode ? 9 : 6} tentativas!`;
+            document.getElementById('language').disabled = isQuartetMode;
+            resetGame();
+            generateCalendar();
         }
 
         updateCurrentDate();
         currentCalendarMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        loadWordList(currentLanguage).then(() => {
+        Promise.all(languages.map(lang => loadWordList(lang))).then(() => {
+            correctWord = selectDailyWord(currentLanguage);
             generateCalendar();
             loadAttempts();
-            inputs[0].focus();
+            document.querySelector('#in1').focus();
         });
     </script>
 </body>
