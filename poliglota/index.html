@@ -365,37 +365,6 @@
                 JSON.stringify({ attempts, attemptCount, won }));
         }
 
-        function updateBoard() {
-            for (let i = 0; i < attempts.length; i++) {
-                const row = document.getElementById(`row${i + 1}`);
-                row.innerHTML = '';
-                const guess = attempts[i];
-                const tempWord = [...correctWord];
-                
-                for (let j = 0; j < 5; j++) {
-                    const slot = document.createElement('div');
-                    slot.classList.add('slot');
-                    slot.textContent = guess[j];
-                    if (guess[j] === tempWord[j]) {
-                        slot.classList.add('green');
-                        tempWord[j] = null;
-                    }
-                    row.appendChild(slot);
-                }
-
-                for (let j = 0; j < 5; j++) {
-                    if (!row.children[j].classList.contains('green')) {
-                        const letter = guess[j];
-                        const index = tempWord.indexOf(letter);
-                        if (index !== -1) {
-                            row.children[j].classList.add('yellow');
-                            tempWord[index] = null;
-                        }
-                    }
-                }
-            }
-        }
-
         function normalizeLetter(letter) {
             // Remove acentos mantendo "ñ" e "ç"
             return letter.toLowerCase()
@@ -404,6 +373,41 @@
                 .replace(/[íìîï]/g, 'i')
                 .replace(/[óòõôö]/g, 'o')
                 .replace(/[úùûü]/g, 'u');
+        }
+
+        function updateBoard() {
+            for (let i = 0; i < attempts.length; i++) {
+                const row = document.getElementById(`row${i + 1}`);
+                row.innerHTML = '';
+                const guess = attempts[i];
+                const tempWord = [...correctWord];
+                const normalizedGuess = guess.map(normalizeLetter);
+                const normalizedCorrectWord = correctWord.map(normalizeLetter);
+
+                // Primeiro verifica as letras verdes (posição correta)
+                for (let j = 0; j < 5; j++) {
+                    const slot = document.createElement('div');
+                    slot.classList.add('slot');
+                    slot.textContent = guess[j]; // Exibe a letra original
+                    if (normalizedGuess[j] === normalizedCorrectWord[j]) {
+                        slot.classList.add('green');
+                        tempWord[j] = null; // Marca como usado
+                    }
+                    row.appendChild(slot);
+                }
+
+                // Depois verifica as letras amarelas (presente, mas em posição errada)
+                for (let j = 0; j < 5; j++) {
+                    if (!row.children[j].classList.contains('green')) {
+                        const letter = normalizedGuess[j];
+                        const index = tempWord.map(normalizeLetter).indexOf(letter);
+                        if (index !== -1) {
+                            row.children[j].classList.add('yellow');
+                            tempWord[index] = null; // Marca como usado
+                        }
+                    }
+                }
+            }
         }
 
         function checkGuess() {
@@ -450,8 +454,11 @@
                     const tempWord = [...correctWord];
                     const result = Array(5).fill('⬜');
 
+                    const normalizedGuess = guess.map(normalizeLetter);
+                    const normalizedCorrectWord = correctWord.map(normalizeLetter);
+
                     for (let i = 0; i < 5; i++) {
-                        if (guess[i] === tempWord[i]) {
+                        if (normalizedGuess[i] === normalizedCorrectWord[i]) {
                             result[i] = '🟩';
                             tempWord[i] = null;
                         }
@@ -459,8 +466,8 @@
 
                     for (let i = 0; i < 5; i++) {
                         if (result[i] === '⬜') {
-                            const letter = guess[i];
-                            const index = tempWord.indexOf(letter);
+                            const letter = normalizedGuess[i];
+                            const index = tempWord.map(normalizeLetter).indexOf(letter);
                             if (index !== -1) {
                                 result[i] = '🟨';
                                 tempWord[index] = null;
