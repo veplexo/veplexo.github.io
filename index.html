@@ -69,11 +69,42 @@
         .whatsapp-button:hover {
             background-color: #20bd57;
         }
+        .calendar-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .calendar-day {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .calendar-day:hover {
+            background-color: #f0f0f0;
+        }
+        .current-day {
+            background-color: #4caf50;
+            color: white;
+        }
+        .current-date {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <h1>Acerte a Senha</h1>
     <p>Tente adivinhar a senha de 4 dígitos (0-9). Você tem 6 tentativas!</p>
+    <div class="current-date" id="currentDate"></div>
     <div class="game-container" id="game">
         <div class="row" id="row1"></div>
         <div class="row" id="row2"></div>
@@ -91,22 +122,104 @@
     </div>
     <div id="result"></div>
 
+    <div class="calendar-container">
+        <h2>Jogos Anteriores</h2>
+        <div class="calendar" id="calendar"></div>
+    </div>
+
     <script>
-        const currentDate = new Date();
+        let currentDate = new Date();
         const attempts = [];
         let attemptCount = 0;
+        let selectedDate = new Date(currentDate);
 
-        function generatePassword() {
-            const day = currentDate.getDate();
-            const month = currentDate.getMonth() + 1;
-            const year = currentDate.getFullYear();
+        // Função para gerar senhas mais aleatórias usando um algoritmo mais complexo
+        function generatePassword(date) {
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
             
-            let seed = (year * 13 + month * 17 + day * 23) % 10000;
-            const password = String(seed).padStart(4, '0').split('').map(Number);
+            // Usando uma combinação de operações para maior aleatoriedade
+            let seed = (year * 10000 + month * 100 + day);
+            seed = (seed * 9301 + 49297) % 233280; // Linear Congruential Generator
+            const random = seed / 233280;
+            
+            // Gera um número de 4 dígitos mais aleatório
+            let password = Math.floor(random * 10000);
+            password = String(password).padStart(4, '0').split('').map(Number);
             return password;
         }
 
-        const correctPassword = generatePassword();
+        let correctPassword = generatePassword(currentDate);
+
+        // Mostrar data atual
+        function updateCurrentDate() {
+            document.getElementById('currentDate').textContent = 
+                `Jogo de hoje: ${selectedDate.toLocaleDateString('pt-BR')}`;
+        }
+
+        // Função para gerar o calendário
+        function generateCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+            
+            const startDate = new Date('2025-03-01');
+            const today = new Date();
+            
+            // Calcula o número de dias entre a data inicial e hoje
+            const daysToShow = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            
+            // Preenche os dias anteriores ao primeiro dia do mês
+            const firstDayOfMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1).getDay();
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('calendar-day');
+                calendar.appendChild(emptyDay);
+            }
+
+            // Preenche os dias do calendário
+            for (let i = 0; i < daysToShow; i++) {
+                const dayDate = new Date(startDate);
+                dayDate.setDate(startDate.getDate() + i);
+                
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day');
+                dayElement.textContent = dayDate.getDate();
+                
+                // Marca o dia atual
+                if (dayDate.toDateString() === currentDate.toDateString()) {
+                    dayElement.classList.add('current-day');
+                }
+
+                // Adiciona evento de clique
+                dayElement.addEventListener('click', () => {
+                    selectedDate = dayDate;
+                    correctPassword = generatePassword(selectedDate);
+                    resetGame();
+                    updateCurrentDate();
+                });
+
+                calendar.appendChild(dayElement);
+            }
+        }
+
+        // Resetar o jogo para uma nova data
+        function resetGame() {
+            attempts.length = 0;
+            attemptCount = 0;
+            document.getElementById('result').innerHTML = '';
+            document.querySelector('button').disabled = false;
+            const inputs = document.querySelectorAll('.input-slot');
+            inputs.forEach(input => {
+                input.disabled = false;
+                input.value = '';
+            });
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`row${i}`).innerHTML = '';
+            }
+            loadAttempts();
+            inputs[0].focus();
+        }
 
         const inputs = document.querySelectorAll('.input-slot');
         inputs.forEach((input, index) => {
@@ -126,7 +239,7 @@
         });
 
         function loadAttempts() {
-            const saved = localStorage.getItem('passwordGame_' + currentDate.toDateString());
+            const saved = localStorage.getItem('passwordGame_' + selectedDate.toDateString());
             if (saved) {
                 const data = JSON.parse(saved);
                 attempts.push(...data.attempts);
@@ -139,7 +252,7 @@
         }
 
         function saveAttempts(won = false) {
-            localStorage.setItem('passwordGame_' + currentDate.toDateString(), 
+            localStorage.setItem('passwordGame_' + selectedDate.toDateString(), 
                 JSON.stringify({ attempts, attemptCount, won }));
         }
 
@@ -233,9 +346,9 @@
                     return formatted.join(' ');
                 }).join('\n');
 
-                return `Acertei a senha do dia ${currentDate.toLocaleDateString('pt-BR')} em ${attemptCount}/6 tentativas!\n${formattedAttempts}`;
+                return `Acertei a senha do dia ${selectedDate.toLocaleDateString('pt-BR')} em ${attemptCount}/6 tentativas!\n${formattedAttempts}`;
             } else {
-                return `Não consegui acertar a senha do dia ${currentDate.toLocaleDateString('pt-BR')}!\nA senha era ${correctPassword.join('')}.`;
+                return `Não consegui acertar a senha do dia ${selectedDate.toLocaleDateString('pt-BR')}!\nA senha era ${correctPassword.join('')}.`;
             }
         }
 
@@ -256,6 +369,9 @@
             inputs.forEach(input => input.disabled = true);
         }
 
+        // Inicialização
+        updateCurrentDate();
+        generateCalendar();
         loadAttempts();
         inputs[0].focus();
     </script>
