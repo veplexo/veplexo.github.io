@@ -328,7 +328,8 @@
         const inputs = document.querySelectorAll('.input-slot');
         inputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
-                e.target.value = e.target.value.replace(/[^a-zA-Z]/g, '');
+                // Permite letras com acentos
+                e.target.value = e.target.value.replace(/[^a-zA-Zñáéíóúàèìòùâêîôûãõäëïöüç]/gi, '');
                 if (e.target.value.length === 1 && index < 4) {
                     inputs[index + 1].focus();
                 }
@@ -395,6 +396,16 @@
             }
         }
 
+        function normalizeLetter(letter) {
+            // Remove acentos mantendo "ñ" e "ç"
+            return letter.toLowerCase()
+                .replace(/[áàãâä]/g, 'a')
+                .replace(/[éèêë]/g, 'e')
+                .replace(/[íìîï]/g, 'i')
+                .replace(/[óòõôö]/g, 'o')
+                .replace(/[úùûü]/g, 'u');
+        }
+
         function checkGuess() {
             if (attemptCount >= 6) return;
 
@@ -406,18 +417,22 @@
                 document.getElementById('in5').value.toLowerCase()
             ];
 
-            const guess = inputsValues.join('');
             if (inputsValues.some(v => v === '')) {
                 document.getElementById('result').textContent = 'Preencha todos os campos!';
                 return;
             }
 
-            attempts.push(inputsValues);
+            // Normaliza a tentativa do usuário e a palavra correta apenas para comparação
+            const normalizedGuess = inputsValues.map(normalizeLetter);
+            const normalizedCorrectWord = correctWord.map(normalizeLetter);
+
+            attempts.push(inputsValues); // Armazena a tentativa original (com acentos e ñ)
             attemptCount++;
             updateBoard();
             saveAttempts();
 
-            const won = inputsValues.every((c, i) => c === correctWord[i]);
+            // Verifica se a palavra normalizada está correta
+            const won = normalizedGuess.every((c, i) => c === normalizedCorrectWord[i]);
             if (won) {
                 saveAttempts(true);
                 endGame(true);
