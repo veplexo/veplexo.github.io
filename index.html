@@ -289,7 +289,6 @@
             const inputRow = document.getElementById('input-row');
             const inputs = document.querySelectorAll('.input-slot');
             
-            // Reexibe os inputs
             inputRow.style.display = 'flex';
             
             inputs.forEach(input => {
@@ -440,6 +439,22 @@
             }
         }
 
+        // Função para detectar se é um dispositivo móvel
+        function isMobileDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            return /android|iphone|ipad|ipod|windows phone/i.test(userAgent);
+        }
+
+        // Função para copiar o texto para o clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Resultado copiado para a área de transferência!');
+            }).catch(err => {
+                console.error('Erro ao copiar: ', err);
+                alert('Erro ao copiar o resultado.');
+            });
+        }
+
         function endGame(won) {
             const resultDiv = document.getElementById('result');
             const shareText = generateShareText(won);
@@ -448,12 +463,19 @@
             const inputRow = document.getElementById('input-row');
 
             if (won) {
-                resultDiv.innerHTML = `Parabéns! Você acertou a senha em ${attemptCount} tentativa(s)!<br>` +
-                    `<a href="${whatsappUrl}" target="_blank" class="whatsapp-button">Compartilhar no WhatsApp</a>`;
+                if (isMobileDevice()) {
+                    // Mostra o botão do WhatsApp apenas em dispositivos móveis
+                    resultDiv.innerHTML = `Parabéns! Você acertou a senha em ${attemptCount} tentativa(s)!<br>` +
+                        `<a href="${whatsappUrl}" target="_blank" class="whatsapp-button">Compartilhar no WhatsApp</a>`;
+                } else {
+                    // Mostra o botão "Copiar resultado" em desktops
+                    resultDiv.innerHTML = `Parabéns! Você acertou a senha em ${attemptCount} tentativa(s)!<br>` +
+                        `<button class="whatsapp-button" onclick="copyToClipboard('${shareText}')">Copiar resultado</button>`;
+                }
             } else {
                 resultDiv.innerHTML = `Fim de jogo! A senha era ${correctPassword.join('')}. Tente novamente amanhã!`;
             }
-            
+
             // Oculta os inputs
             inputRow.style.display = 'none';
         }
