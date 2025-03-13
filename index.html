@@ -47,11 +47,6 @@
         .green {
             background-color: #4caf50;
         }
-        button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-        }
         #result {
             margin-top: 20px;
             font-weight: bold;
@@ -91,13 +86,30 @@
             background-color: #f0f0f0;
         }
         .current-day {
+            border: 2px solid #000;
+        }
+        .calendar-day.green {
             background-color: #4caf50;
+            color: white;
+        }
+        .calendar-day.yellow {
+            background-color: #ffeb3b;
+        }
+        .calendar-day.red {
+            background-color: #ff3333;
             color: white;
         }
         .current-date {
             font-size: 18px;
             margin-bottom: 20px;
             font-weight: bold;
+        }
+        .pagination {
+            margin: 10px 0;
+        }
+        .pagination button {
+            padding: 5px 10px;
+            margin: 0 5px;
         }
     </style>
 </head>
@@ -118,12 +130,16 @@
             <input type="text" class="input-slot" id="in3" maxlength="1">
             <input type="text" class="input-slot" id="in4" maxlength="1">
         </div>
-        <button onclick="checkGuess()">Enviar</button>
     </div>
     <div id="result"></div>
 
     <div class="calendar-container">
         <h2>Jogos Anteriores</h2>
+        <div class="pagination">
+            <button onclick="prevMonth()">◄</button>
+            <span id="currentMonth"></span>
+            <button onclick="nextMonth()">►</button>
+        </div>
         <div class="calendar" id="calendar"></div>
     </div>
 
@@ -132,19 +148,15 @@
         const attempts = [];
         let attemptCount = 0;
         let selectedDate = new Date(currentDate);
+        let currentCalendarMonth = new Date();
 
-        // Função para gerar senhas mais aleatórias usando um algoritmo mais complexo
         function generatePassword(date) {
             const day = date.getDate();
             const month = date.getMonth() + 1;
             const year = date.getFullYear();
-            
-            // Usando uma combinação de operações para maior aleatoriedade
             let seed = (year * 10000 + month * 100 + day);
-            seed = (seed * 9301 + 49297) % 233280; // Linear Congruential Generator
+            seed = (seed * 9301 + 49297) % 233280;
             const random = seed / 233280;
-            
-            // Gera um número de 4 dígitos mais aleatório
             let password = Math.floor(random * 10000);
             password = String(password).padStart(4, '0').split('').map(Number);
             return password;
@@ -152,46 +164,51 @@
 
         let correctPassword = generatePassword(currentDate);
 
-        // Mostrar data atual
         function updateCurrentDate() {
             document.getElementById('currentDate').textContent = 
                 `Jogo de hoje: ${selectedDate.toLocaleDateString('pt-BR')}`;
         }
 
-        // Função para gerar o calendário
         function generateCalendar() {
             const calendar = document.getElementById('calendar');
             calendar.innerHTML = '';
             
-            const startDate = new Date('2025-03-01');
-            const today = new Date();
+            const firstDay = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), 1);
+            const lastDay = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth() + 1, 0);
+            const firstDayOfWeek = firstDay.getDay();
             
-            // Calcula o número de dias entre a data inicial e hoje
-            const daysToShow = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
-            
-            // Preenche os dias anteriores ao primeiro dia do mês
-            const firstDayOfMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1).getDay();
-            for (let i = 0; i < firstDayOfMonth; i++) {
+            document.getElementById('currentMonth').textContent = 
+                firstDay.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+
+            for (let i = 0; i < firstDayOfWeek; i++) {
                 const emptyDay = document.createElement('div');
                 emptyDay.classList.add('calendar-day');
                 calendar.appendChild(emptyDay);
             }
 
-            // Preenche os dias do calendário
-            for (let i = 0; i < daysToShow; i++) {
-                const dayDate = new Date(startDate);
-                dayDate.setDate(startDate.getDate() + i);
-                
+            const today = new Date();
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dayDate = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
                 const dayElement = document.createElement('div');
                 dayElement.classList.add('calendar-day');
-                dayElement.textContent = dayDate.getDate();
-                
-                // Marca o dia atual
+                dayElement.textContent = day;
+
                 if (dayDate.toDateString() === currentDate.toDateString()) {
                     dayElement.classList.add('current-day');
                 }
 
-                // Adiciona evento de clique
+                const saved = localStorage.getItem('passwordGame_' + dayDate.toDateString());
+                if (saved && dayDate <= today) {
+                    const data = JSON.parse(saved);
+                    if (data.won) {
+                        dayElement.classList.add('green');
+                    } else if (data.attemptCount > 0 && data.attemptCount < 6) {
+                        dayElement.classList.add('yellow');
+                    } else if (data.attemptCount >= 6) {
+                        dayElement.classList.add('red');
+                    }
+                }
+
                 dayElement.addEventListener('click', () => {
                     selectedDate = dayDate;
                     correctPassword = generatePassword(selectedDate);
@@ -203,12 +220,23 @@
             }
         }
 
-        // Resetar o jogo para uma nova data
+        function prevMonth() {
+            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() - 1);
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            if (currentCalendarMonth.getMonth() < currentDate.getMonth() || 
+                currentCalendarMonth.getFullYear() < currentDate.getFullYear()) {
+                currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + 1);
+                generateCalendar();
+            }
+        }
+
         function resetGame() {
             attempts.length = 0;
             attemptCount = 0;
             document.getElementById('result').innerHTML = '';
-            document.querySelector('button').disabled = false;
             const inputs = document.querySelectorAll('.input-slot');
             inputs.forEach(input => {
                 input.disabled = false;
@@ -234,6 +262,10 @@
                     inputs[index - 1].focus();
                 } else if (e.key === 'Enter') {
                     checkGuess();
+                } else if (e.key === 'ArrowLeft' && index > 0) {
+                    inputs[index - 1].focus();
+                } else if (e.key === 'ArrowRight' && index < 3) {
+                    inputs[index + 1].focus();
                 }
             });
         });
@@ -328,9 +360,9 @@
                     const formatted = guess.map((digit, i) => {
                         if (digit === tempPassword[i]) {
                             tempPassword[i] = null;
-                            return `[*${digit}*]`; // Dígito correto no lugar certo
+                            return `[*${digit}*]`;
                         }
-                        return `[${digit}]`; // Placeholder inicial
+                        return `[${digit}]`;
                     });
 
                     for (let i = 0; i < 4; i++) {
@@ -338,7 +370,7 @@
                             const digit = guess[i];
                             const index = tempPassword.indexOf(digit);
                             if (index !== -1) {
-                                formatted[i] = `[_${digit}_]`; // Dígito correto no lugar errado
+                                formatted[i] = `[_${digit}_]`;
                                 tempPassword[index] = null;
                             }
                         }
@@ -365,12 +397,11 @@
                 resultDiv.innerHTML = `Fim de jogo! A senha era ${correctPassword.join('')}. Tente novamente amanhã!`;
             }
             
-            document.querySelector('button').disabled = true;
             inputs.forEach(input => input.disabled = true);
         }
 
-        // Inicialização
         updateCurrentDate();
+        currentCalendarMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         generateCalendar();
         loadAttempts();
         inputs[0].focus();
