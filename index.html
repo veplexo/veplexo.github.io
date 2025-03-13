@@ -194,6 +194,7 @@
         let attemptCount = 0;
         let selectedDate = new Date(currentDate);
         let currentCalendarMonth = new Date();
+        let shareText = ''; // Variável global para armazenar o texto a ser copiado
 
         function generatePassword(date) {
             const day = date.getDate();
@@ -446,8 +447,8 @@
         }
 
         // Função para copiar o texto para o clipboard
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
+        function copyToClipboard() {
+            navigator.clipboard.writeText(shareText).then(() => {
                 alert('Resultado copiado para a área de transferência!');
             }).catch(err => {
                 console.error('Erro ao copiar: ', err);
@@ -457,7 +458,7 @@
 
         function endGame(won) {
             const resultDiv = document.getElementById('result');
-            const shareText = generateShareText(won);
+            shareText = generateShareText(won); // Armazena o texto na variável global
             const encodedText = encodeURIComponent(shareText);
             const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
             const inputRow = document.getElementById('input-row');
@@ -470,7 +471,7 @@
                 } else {
                     // Mostra o botão "Copiar resultado" em desktops
                     resultDiv.innerHTML = `Parabéns! Você acertou a senha em ${attemptCount} tentativa(s)!<br>` +
-                        `<button class="whatsapp-button" onclick="copyToClipboard('${shareText}')">Copiar resultado</button>`;
+                        `<button class="whatsapp-button" onclick="copyToClipboard()">Copiar resultado</button>`;
                 }
             } else {
                 resultDiv.innerHTML = `Fim de jogo! A senha era ${correctPassword.join('')}. Tente novamente amanhã!`;
