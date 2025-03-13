@@ -181,14 +181,12 @@
             document.getElementById('currentMonth').textContent = 
                 firstDay.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
 
-            // Preenche os dias vazios antes do início do mês
             for (let i = 0; i < firstDayOfWeek; i++) {
                 const emptyDay = document.createElement('div');
                 emptyDay.classList.add('calendar-day');
                 calendar.appendChild(emptyDay);
             }
 
-            // Determina o último dia a ser exibido (todos os dias para meses passados, até hoje para o mês atual)
             const isCurrentMonth = currentCalendarMonth.getFullYear() === today.getFullYear() && 
                                   currentCalendarMonth.getMonth() === today.getMonth();
             const maxDay = isCurrentMonth ? today.getDate() : lastDay.getDate();
@@ -363,30 +361,34 @@
             if (won) {
                 const formattedAttempts = attempts.map(guess => {
                     const tempPassword = [...correctPassword];
-                    const formatted = guess.map((digit, i) => {
-                        if (digit === tempPassword[i]) {
-                            tempPassword[i] = null;
-                            return `[*${digit}*]`;
-                        }
-                        return `[${digit}]`;
-                    });
+                    const result = Array(4).fill('⬜'); // Inicializa com emoji de número errado
 
+                    // Primeiro, verifica os números certos na posição certa
                     for (let i = 0; i < 4; i++) {
-                        if (!formatted[i].startsWith('*')) {
+                        if (guess[i] === tempPassword[i]) {
+                            result[i] = '🟩'; // Número certo, posição certa
+                            tempPassword[i] = null; // Marca como usado
+                        }
+                    }
+
+                    // Depois, verifica os números certos na posição errada
+                    for (let i = 0; i < 4; i++) {
+                        if (result[i] === '⬜') { // Só verifica se ainda não foi marcado como correto
                             const digit = guess[i];
                             const index = tempPassword.indexOf(digit);
                             if (index !== -1) {
-                                formatted[i] = `[_${digit}_]`;
-                                tempPassword[index] = null;
+                                result[i] = '🟨'; // Número certo, posição errada
+                                tempPassword[index] = null; // Marca como usado
                             }
                         }
                     }
-                    return formatted.join(' ');
+
+                    return result.join(' ');
                 }).join('\n');
 
                 return `Acertei a senha do dia ${selectedDate.toLocaleDateString('pt-BR')} em ${attemptCount}/6 tentativas!\n${formattedAttempts}`;
             } else {
-                return `Não consegui acertar a senha do dia ${selectedDate.toLocaleDateString('pt-BR')}!\nA senha era ${correctPassword.join('')}.`;
+                return `Não consegui acertar a senha do dia ${selectedDate.toLocaleDateString('pt-BR')}!`;
             }
         }
 
