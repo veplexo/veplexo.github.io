@@ -1,1 +1,522 @@
-<p>Teste</p>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Multilíngue</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        .game-container {
+            display: inline-block;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 400px;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        .slot {
+            width: 20%;
+            max-width: 60px;
+            aspect-ratio: 1;
+            border: 2px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(16px, 5vw, 24px);
+            font-weight: bold;
+            box-sizing: border-box;
+            background-color: #2a2a2a;
+            text-transform: uppercase;
+        }
+        .input-slot {
+            width: 20%;
+            max-width: 60px;
+            aspect-ratio: 1;
+            border: 2px solid #444;
+            text-align: center;
+            font-size: clamp(16px, 5vw, 24px);
+            font-weight: bold;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            background-color: #333;
+            color: #fff;
+            text-transform: uppercase;
+        }
+        .input-slot:focus {
+            outline: none;
+            border-color: #666;
+        }
+        .yellow {
+            background-color: #edb600;
+        }
+        .green {
+            background-color: #4caf50;
+        }
+        #result {
+            margin: 20px 0;
+            font-weight: bold;
+            word-wrap: break-word;
+        }
+        .whatsapp-button {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: clamp(14px, 4vw, 16px);
+        }
+        .whatsapp-button:hover {
+            background-color: #20bd57;
+        }
+        .language-selector {
+            margin: 10px 0;
+        }
+        select {
+            padding: 5px;
+            font-size: 16px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+        .calendar-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 10px;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .calendar-day {
+            padding: 8px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            background-color: #2a2a2a;
+            font-size: clamp(12px, 3vw, 16px);
+        }
+        .calendar-day:hover {
+            background-color: #404040;
+        }
+        .current-day {
+            border: 2px solid #fff;
+        }
+        .calendar-day.green {
+            background-color: #4caf50;
+            color: white;
+        }
+        .calendar-day.yellow {
+            background-color: #edb600;
+        }
+        .calendar-day.red {
+            background-color: #ff3333;
+            color: white;
+        }
+        .current-date {
+            font-size: clamp(16px, 5vw, 18px);
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .pagination {
+            margin: 10px 0;
+        }
+        .pagination button {
+            padding: 5px 10px;
+            margin: 0 5px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .pagination button:hover {
+            background-color: #444;
+        }
+        h1 {
+            font-size: clamp(24px, 8vw, 36px);
+            margin: 0 0 10px;
+        }
+        p {
+            font-size: clamp(14px, 4vw, 16px);
+            margin: 0 0 20px;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wordle Multilíngue</h1>
+    <p>Tente adivinhar a palavra de 5 letras. Você tem 6 tentativas!</p>
+    <div class="language-selector">
+        <label for="language">Idioma: </label>
+        <select id="language" onchange="changeLanguage()">
+            <option value="portugues">Português</option>
+            <option value="ingles">Inglês</option>
+            <option value="espanhol">Espanhol</option>
+            <option value="italiano">Italiano</option>
+        </select>
+    </div>
+    <div class="current-date" id="currentDate"></div>
+    <div class="game-container" id="game">
+        <div class="row" id="row1"></div>
+        <div class="row" id="row2"></div>
+        <div class="row" id="row3"></div>
+        <div class="row" id="row4"></div>
+        <div class="row" id="row5"></div>
+        <div class="row" id="row6"></div>
+        <div class="row" id="input-row">
+            <input type="text" class="input-slot" id="in1" maxlength="1">
+            <input type="text" class="input-slot" id="in2" maxlength="1">
+            <input type="text" class="input-slot" id="in3" maxlength="1">
+            <input type="text" class="input-slot" id="in4" maxlength="1">
+            <input type="text" class="input-slot" id="in5" maxlength="1">
+        </div>
+    </div>
+    <div id="result"></div>
+
+    <div class="calendar-container">
+        <h2>Jogos Anteriores</h2>
+        <div class="pagination">
+            <button onclick="prevMonth()">◄</button>
+            <span id="currentMonth"></span>
+            <button onclick="nextMonth()">►</button>
+        </div>
+        <div class="calendar" id="calendar"></div>
+    </div>
+
+    <script>
+        let currentDate = new Date('March 13, 2025');
+        const attempts = [];
+        let attemptCount = 0;
+        let selectedDate = new Date(currentDate);
+        let currentCalendarMonth = new Date();
+        let shareText = '';
+        let wordList = [];
+        let currentLanguage = 'portugues';
+        let correctWord = '';
+
+        async function loadWordList(language) {
+            const response = await fetch(`${language}_5.txt`);
+            const text = await response.text();
+            wordList = text.split('\n').map(word => word.trim().toLowerCase()).filter(word => word.length === 5);
+            selectDailyWord();
+        }
+
+        function selectDailyWord() {
+            const day = selectedDate.getDate();
+            const month = selectedDate.getMonth() + 1;
+            const year = selectedDate.getFullYear();
+            let seed = (year * 10000 + month * 100 + day);
+            seed = (seed * 9301 + 49297) % 233280;
+            const random = seed / 233280;
+            const index = Math.floor(random * wordList.length);
+            correctWord = wordList[index].split('');
+        }
+
+        function updateCurrentDate() {
+            document.getElementById('currentDate').textContent = 
+                `Jogo de hoje: ${selectedDate.toLocaleDateString('pt-BR')}`;
+        }
+
+        function generateCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+            
+            const firstDay = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), 1);
+            const lastDay = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth() + 1, 0);
+            const firstDayOfWeek = firstDay.getDay();
+            const today = new Date(currentDate);
+            
+            document.getElementById('currentMonth').textContent = 
+                firstDay.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('calendar-day');
+                calendar.appendChild(emptyDay);
+            }
+
+            const isCurrentMonth = currentCalendarMonth.getFullYear() === today.getFullYear() && 
+                                  currentCalendarMonth.getMonth() === today.getMonth();
+            const maxDay = isCurrentMonth ? today.getDate() : lastDay.getDate();
+
+            for (let day = 1; day <= maxDay; day++) {
+                const dayDate = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day');
+                dayElement.textContent = day;
+
+                if (dayDate.toDateString() === currentDate.toDateString()) {
+                    dayElement.classList.add('current-day');
+                }
+
+                const saved = localStorage.getItem(`wordle_${currentLanguage}_${dayDate.toDateString()}`);
+                if (saved && dayDate <= today) {
+                    const data = JSON.parse(saved);
+                    if (data.won) {
+                        dayElement.classList.add('green');
+                    } else if (data.attemptCount > 0 && data.attemptCount < 6) {
+                        dayElement.classList.add('yellow');
+                    } else if (data.attemptCount >= 6) {
+                        dayElement.classList.add('red');
+                    }
+                }
+
+                dayElement.addEventListener('click', () => {
+                    selectedDate = dayDate;
+                    selectDailyWord();
+                    resetGame();
+                    updateCurrentDate();
+                });
+
+                calendar.appendChild(dayElement);
+            }
+        }
+
+        function prevMonth() {
+            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() - 1);
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            if (currentCalendarMonth.getMonth() < currentDate.getMonth() || 
+                currentCalendarMonth.getFullYear() < currentDate.getFullYear()) {
+                currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + 1);
+                generateCalendar();
+            }
+        }
+
+        function resetGame() {
+            attempts.length = 0;
+            attemptCount = 0;
+            document.getElementById('result').innerHTML = '';
+            const inputRow = document.getElementById('input-row');
+            const inputs = document.querySelectorAll('.input-slot');
+            
+            inputRow.style.display = 'flex';
+            
+            inputs.forEach(input => {
+                input.disabled = false;
+                input.value = '';
+            });
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`row${i}`).innerHTML = '';
+            }
+            loadAttempts();
+            inputs[0].focus();
+        }
+
+        const inputs = document.querySelectorAll('.input-slot');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^a-zA-Z]/g, '');
+                if (e.target.value.length === 1 && index < 4) {
+                    inputs[index + 1].focus();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && input.value === '' && index > 0) {
+                    inputs[index - 1].focus();
+                } else if (e.key === 'Enter') {
+                    checkGuess();
+                } else if (e.key === 'ArrowLeft' && index > 0) {
+                    inputs[index - 1].focus();
+                } else if (e.key === 'ArrowRight' && index < 4) {
+                    inputs[index + 1].focus();
+                }
+            });
+        });
+
+        function loadAttempts() {
+            const saved = localStorage.getItem(`wordle_${currentLanguage}_${selectedDate.toDateString()}`);
+            if (saved) {
+                const data = JSON.parse(saved);
+                attempts.push(...data.attempts);
+                attemptCount = data.attemptCount;
+                updateBoard();
+                if (data.won || attemptCount >= 6) {
+                    endGame(data.won);
+                }
+            }
+        }
+
+        function saveAttempts(won = false) {
+            localStorage.setItem(`wordle_${currentLanguage}_${selectedDate.toDateString()}`, 
+                JSON.stringify({ attempts, attemptCount, won }));
+        }
+
+        function updateBoard() {
+            for (let i = 0; i < attempts.length; i++) {
+                const row = document.getElementById(`row${i + 1}`);
+                row.innerHTML = '';
+                const guess = attempts[i];
+                const tempWord = [...correctWord];
+                
+                for (let j = 0; j < 5; j++) {
+                    const slot = document.createElement('div');
+                    slot.classList.add('slot');
+                    slot.textContent = guess[j];
+                    if (guess[j] === tempWord[j]) {
+                        slot.classList.add('green');
+                        tempWord[j] = null;
+                    }
+                    row.appendChild(slot);
+                }
+
+                for (let j = 0; j < 5; j++) {
+                    if (!row.children[j].classList.contains('green')) {
+                        const letter = guess[j];
+                        const index = tempWord.indexOf(letter);
+                        if (index !== -1) {
+                            row.children[j].classList.add('yellow');
+                            tempWord[index] = null;
+                        }
+                    }
+                }
+            }
+        }
+
+        function checkGuess() {
+            if (attemptCount >= 6) return;
+
+            const inputsValues = [
+                document.getElementById('in1').value.toLowerCase(),
+                document.getElementById('in2').value.toLowerCase(),
+                document.getElementById('in3').value.toLowerCase(),
+                document.getElementById('in4').value.toLowerCase(),
+                document.getElementById('in5').value.toLowerCase()
+            ];
+
+            const guess = inputsValues.join('');
+            if (inputsValues.some(v => v === '')) {
+                document.getElementById('result').textContent = 'Preencha todos os campos!';
+                return;
+            }
+            if (!wordList.includes(guess)) {
+                document.getElementById('result').textContent = 'Palavra inválida!';
+                return;
+            }
+
+            attempts.push(inputsValues);
+            attemptCount++;
+            updateBoard();
+            saveAttempts();
+
+            const won = inputsValues.every((c, i) => c === correctWord[i]);
+            if (won) {
+                saveAttempts(true);
+                endGame(true);
+            } else if (attemptCount === 6) {
+                endGame(false);
+            }
+
+            inputs.forEach(input => input.value = '');
+            inputs[0].focus();
+        }
+
+        function generateShareText(won) {
+            if (won) {
+                const formattedAttempts = attempts.map(guess => {
+                    const tempWord = [...correctWord];
+                    const result = Array(5).fill('⬜');
+
+                    for (let i = 0; i < 5; i++) {
+                        if (guess[i] === tempWord[i]) {
+                            result[i] = '🟩';
+                            tempWord[i] = null;
+                        }
+                    }
+
+                    for (let i = 0; i < 5; i++) {
+                        if (result[i] === '⬜') {
+                            const letter = guess[i];
+                            const index = tempWord.indexOf(letter);
+                            if (index !== -1) {
+                                result[i] = '🟨';
+                                tempWord[index] = null;
+                            }
+                        }
+                    }
+
+                    return result.join(' ');
+                }).join('\n');
+
+                return `Acertei a palavra do dia ${selectedDate.toLocaleDateString('pt-BR')} (${currentLanguage}) em ${attemptCount}/6!\n${formattedAttempts}`;
+            } else {
+                return `Não consegui acertar a palavra do dia ${selectedDate.toLocaleDateString('pt-BR')} (${currentLanguage})!`;
+            }
+        }
+
+        function isMobileDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            return /android|iphone|ipad|ipod|windows phone/i.test(userAgent);
+        }
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(shareText).then(() => {
+                alert('Resultado copiado para a área de transferência!');
+            }).catch(err => {
+                console.error('Erro ao copiar: ', err);
+                alert('Erro ao copiar o resultado.');
+            });
+        }
+
+        function endGame(won) {
+            const resultDiv = document.getElementById('result');
+            shareText = generateShareText(won);
+            const encodedText = encodeURIComponent(shareText);
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+            const inputRow = document.getElementById('input-row');
+
+            if (won) {
+                if (isMobileDevice()) {
+                    resultDiv.innerHTML = `Parabéns! Você acertou a palavra em ${attemptCount} tentativa(s)!<br><br>` +
+                        `<a href="${whatsappUrl}" target="_blank" class="whatsapp-button">Compartilhar no WhatsApp</a>`;
+                } else {
+                    resultDiv.innerHTML = `Parabéns! Você acertou a palavra em ${attemptCount} tentativa(s)!<br>` +
+                        `<button class="whatsapp-button" onclick="copyToClipboard()">Copiar resultado</button>`;
+                }
+            } else {
+                resultDiv.innerHTML = `Fim de jogo! A palavra era ${correctWord.join('')}. Tente novamente amanhã!`;
+            }
+
+            inputRow.style.display = 'none';
+        }
+
+        function changeLanguage() {
+            currentLanguage = document.getElementById('language').value;
+            loadWordList(currentLanguage).then(() => {
+                resetGame();
+                generateCalendar();
+            });
+        }
+
+        updateCurrentDate();
+        currentCalendarMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        loadWordList(currentLanguage).then(() => {
+            generateCalendar();
+            loadAttempts();
+            inputs[0].focus();
+        });
+    </script>
+</body>
+</html>
